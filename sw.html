@@ -5,10 +5,13 @@
 </head>
 
 <body>
+  <p>The count value is persisted in the indexedDB and is synced with other tabs with service worker.</p>
   <div id="sw-heartbeat"></div>
+  <div id="pbr"></div>
   <div><button id="increment-btn">+1</button> <span id="count"></span></div>
   <div><button id="sync-btn">Sync player response</button></div>
   <script src="mock_response.js"></script>
+  <script src="db.js"></script>
   <script src="sw_script.js"></script>
 
 </body>

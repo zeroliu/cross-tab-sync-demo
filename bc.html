@@ -5,9 +5,13 @@
 </head>
 
 <body>
-  <div id="sw-heartbeat"></div>
+  <p>The count value is persisted in the indexedDB and is synced with other tabs with broadcast channel.</p>
+  <div id="pbr"></div>
   <div><button id="increment-btn">+1</button> <span id="count"></span></div>
-  <script src="sw_script.js"></script>
+  <div><button id="sync-btn">Sync player response</button></div>
+  <script src="mock_response.js"></script>
+  <script src="db.js"></script>
+  <script src="bc_script.js"></script>
 </body>
 
 </html>

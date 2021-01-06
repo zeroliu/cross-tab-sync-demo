@@ -1,56 +1,15 @@
-let db;
-async function openDb() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open('count');
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      db.createObjectStore('data');
-    };
-    request.onsuccess = () => {
-      resolve(request.result);
-    };
-    request.onerror = () => {
-      reject(request.error);
-    }
-  });
-}
+importScripts('./db.js');
 
 async function setHeartBeat(value) {
-  if (!db) {
-    db = await openDb();
-  }
-  return new Promise((resolve, reject) => {
-    const store = db.transaction('data', 'readwrite').objectStore('data');
-    const writeRequest = store.put(value, 'heartbeat');
-    writeRequest.onsuccess = () => {
-      resolve();
-    };
-    writeRequest.onerror = () => {
-      reject(writeRequest.error);
-    };
-  });
+  await setValue('heartbeat', value);
 }
 
 async function increment() {
-  if (!db) {
-    db = await openDb();
-  }
-  return new Promise((resolve, reject) => {
-    const store = db.transaction('data', 'readwrite').objectStore('data');
-    const getRequest = store.get('count');
-    getRequest.onsuccess = () => {
-      const currentCount = getRequest.result || 0;
-      const writeRequest = store.put(currentCount + 1, 'count');
-      writeRequest.onsuccess = () => {
-        resolve(currentCount + 1);
-      };
-      writeRequest.onerror = () => {
-        reject(writeRequest.error);
-      };
-    };
-    getRequest.onerror = () => {
-      reject(getRequest.error);
-    };
+  await updateValue('count', (count) => {
+    if (!count) {
+      return 1;
+    }
+    return count + 1;
   });
 }
 
@@ -79,7 +38,6 @@ self.addEventListener('message', async (evt) => {
     }
   }
   if (evt.data && evt.data.type === 'SYNC_PLAYER_RESPONSE') {
-    console.log(evt.data.payload);
     const clients = await self.clients.matchAll({
       type: 'window',
     });
