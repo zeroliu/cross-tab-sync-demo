@@ -43,6 +43,9 @@ self.addEventListener('message', async (evt) => {
     });
     if (clients) {
       for (const client of clients) {
+        if (client.id === evt.source.id) {
+          continue;
+        }
         client.postMessage({
           type: 'PLAYER_RESPONSE_UPDATED',
           payload: evt.data.payload,

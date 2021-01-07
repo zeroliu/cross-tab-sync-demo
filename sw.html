@@ -2,14 +2,23 @@
 
 <head>
   <title>Sync tabs state with SW</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+  <style>
+    html {
+      font-family: 'Roboto', sans-serif;
+    }
+  </style>
 </head>
 
 <body>
-  <p>The count value is persisted in the indexedDB and is synced with other tabs with service worker.</p>
   <div id="sw-heartbeat"></div>
-  <div id="pbr"></div>
-  <div><button id="increment-btn">+1</button> <span id="count"></span></div>
-  <div><button id="sync-btn">Sync player response</button></div>
+  <h4>Sync <b>count</b> value persisted in indexedDB</h4>
+  <div><button id="increment-btn">+1</button> Value: <span id="count"></span></div>
+  <h4>Sync in-memory player response (80Kb)</h4>
+  <div><button id="sync-btn">Sync player response</button>
+    <span id="pbr"></span>
+  </div>
   <script src="mock_response.js"></script>
   <script src="db.js"></script>
   <script src="sw_script.js"></script>

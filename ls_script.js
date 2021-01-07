@@ -6,35 +6,46 @@ const syncBtn = document.getElementById('sync-btn');
 const countEl = document.getElementById('count');
 const pbrEl = document.getElementById('pbr');
 
+window.addEventListener('storage', async (ev) => {
+  if (ev.key !== 'STATE_UPDATED' || ev.newValue === null) {
+    return;
+  }
+
+  const data = JSON.parse(ev.newValue);
+
+  if (data.type === 'COUNT_UPDATED') {
+    count = await getValue('count');
+  }
+  if (data.type === 'PLAYER_RESPONSE_UPDATED') {
+    pbrTime = (Date.now() - data.payload.startTs) / 1000;
+    pbrSize = Math.round(data.payload.playerResponse.length / 1024);
+  }
+  render();
+});
+
+function syncState(type, payload) {
+  localStorage.setItem('STATE_UPDATED', JSON.stringify({
+    type,
+    payload,
+  }));
+  localStorage.removeItem('STATE_UPDATED')
+}
+
 function render() {
   countEl.innerHTML = count;
   if (pbrTime >= 0) {
     pbrEl.innerHTML =
         `playback response (${pbrSize}Kb) received after ${pbrTime}s`;
+
   } else {
     pbrEl.innerHTML = `playback response not received`;
   }
 }
 
-const bc = new BroadcastChannel('STATE_UPDATED');
-bc.onmessage = async (evt) => {
-  if (evt.data.type === 'COUNT_UPDATED') {
-    count = await getValue('count');
-  }
-  if (evt.data.type === 'PLAYER_RESPONSE_UPDATED') {
-    pbrTime = (Date.now() - evt.data.payload.startTs) / 1000;
-    pbrSize = Math.round(evt.data.payload.playerResponse.length / 1024);
-  }
-  render();
-};
-
 function syncPlayerResponse() {
-  bc.postMessage({
-    type: 'PLAYER_RESPONSE_UPDATED',
-    payload: {
-      playerResponse,
-      startTs: Date.now(),
-    },
+  syncState('PLAYER_RESPONSE_UPDATED', {
+    playerResponse: window.playerResponse,
+    startTs: Date.now(),
   });
 }
 
@@ -47,9 +58,7 @@ async function increment() {
     }
     return count + 1;
   })
-  bc.postMessage({
-    type: 'COUNT_UPDATED',
-  });
+  syncState('COUNT_UPDATED');
 }
 
 async function run() {

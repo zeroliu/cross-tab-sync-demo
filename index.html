@@ -1,0 +1,125 @@
+<html>
+
+<head>
+  <title>Sync tabs states</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+  <style>
+    html {
+      font-family: 'Roboto', sans-serif;
+    }
+
+    body {
+      max-width: 800px;
+      margin: 20px auto;
+    }
+
+    iframe {
+      border: 1px solid #aaa;
+      border-radius: 10px;
+      width: 100%;
+      padding: 20px;
+    }
+
+    code {
+      display: block;
+      background: #222;
+      color: #fff;
+      border-radius: 10px;
+      width: 100%;
+      padding: 10px;
+      font-style: italic;
+    }
+
+    pre {
+      margin: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Multi-tab State Sync</h1>
+  <p>In a browser, each tab is an independent instance. When more than one tabs hitting the same web site
+    <i>([protocol]://[host]:[port])</i>, they don't share states stored in the memory. To keep the states in sync across
+    multiple tabs, we can take advantage of one of the following technologies:
+  </p>
+  <ul>
+    <li>LocalStorage + storage event</li>
+    <li>Broadcast channel</li>
+    <li>Service worker</li>
+  </ul>
+  <p>In the following sections, we will use these technologies to implement a set of use cases:</p>
+  <ul>
+    <li>Sync in-memory state of large size (80Kb)</li>
+    The sender tabs wraps a player response in a JSON string and attach it to a message that sends to other tabs.
+    <li>Sync state persisted in indexedDB</li>
+    The sender tabs writes a value to the indexedDB and signals other tabs that the value has changed. The receiver tabs
+    pull the data from indexedDB.
+  </ul>
+
+  <div id="localStorage">
+    <h2>LocalStorage + storage event</h2>
+    <p>Tabs visiting the same origin share the same localStorage object. A <a
+        href="https://developer.mozilla.org/en-US/docs/Web/API/Window/storage_event">storage event</a> of the Window
+      interface fires when localStorage has been modified in the context of another document. We can rely on the storage
+      event to "broadcast" changes to other tabs.</p>
+    <p>For instance, we designed a simple flow in this demo:</p>
+    <ol>
+      <li>State changes in one tab (sender), it sets an entry in the localStorage, whose key is <b>STATE_UPDATED</b> and
+        value is
+        the JSON serialized payload.</li>
+      <li>Immediately, the sender tab removes the entry from the localStorage.</li>
+      <li>Other tabs (receivers) will receive two storage events: one for setting the value and one for removing it from
+        the localStorage. They will only care about the first one.</li>
+      <li>Receiver tabs parse the serialized payload and update their state.</li>
+    </ol>
+    <iframe src="ls.html"></iframe>
+  </div>
+  <div id="broadcastChannel">
+    <h2>BroadcastChannel</h2>
+    <p><a src="https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API">BroadcastChannel</a> allows
+      communication between tabs and workers on the same origin. Tabs can set up a <b>STATE_UPDATED</b> channel sync
+      communicate state changes.</p>
+    <p>Compared to the localStorage approach, broadcast channel is more straightforward and
+      performant. The API is specifically designed for sending a broadcast message. The message can be any type of
+      object. Both sender and receiver tabs can work with the object without serialization. </p>
+    <p>The demo works in the following ways:</p>
+    <ol>
+      <li>State changes in the sender tab, it broadcasts the updated state to the <b>STATE_UPDATED</b> channel.</li>
+      <li>The receiver tabs receives the message and update their state.</li>
+    </ol>
+    <iframe src="bc"></iframe>
+  </div>
+  <div id="serviceWorker">
+    <h2>Service worker</h2>
+    <p>All tabs of the same origin shares the same instance of a service worker. In a environment where broadcast
+      channel is not available, service worker can be used to post messages to other tabs.</p>
+    <p>To post a message from client to service worker:</p>
+    <pre><code>
+  navigator.serviceWorker.controller.postMessage(message);
+    </code></pre>
+    <p>To post a message from service worker to clients:</p>
+    <pre><code>
+  const clients = await self.clients.matchAll({
+    type: 'window',
+  });
+  if (clients) {
+    for (const client of clients) {
+      client.postMessage(message);
+    }
+  }
+    </code></pre>
+    <p>It's worth noting that service worker may terminate after 30 seconds of inactivity. Posting a message would wake
+      up the service worker. This process would add extra latency.</p>
+    <p>The demo works in the following ways:</p>
+    <ol>
+      <li>State changes in the sender tab, it posts a message with the updated state to the service worker.</li>
+      <li>The service worker receives the message and proxy the message to other tabs.</li>
+      <li>Receiver tabs receive the message from the service worker and update their state.</li>
+    </ol>
+    <iframe src="sw.html"></iframe>
+  </div>
+
+</body>
+
+</html>

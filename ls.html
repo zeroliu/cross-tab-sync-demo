@@ -1,7 +1,7 @@
 <html>
 
 <head>
-  <title>Sync tabs state with broadcast channel</title>
+  <title>Sync tabs state with localstorage</title>
   <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
   <style>
@@ -14,13 +14,13 @@
 <body>
   <h4>Sync <b>count</b> value persisted in indexedDB</h4>
   <div><button id="increment-btn">+1</button> Value: <span id="count"></span></div>
-  <h4>Sync in-memory player response</h4>
+  <h4>Sync in-memory player response (80Kb)</h4>
   <div><button id="sync-btn">Sync player response</button>
     <span id="pbr"></span>
   </div>
   <script src="mock_response.js"></script>
   <script src="db.js"></script>
-  <script src="bc_script.js"></script>
+  <script src="ls_script.js"></script>
 </body>
 
 </html>

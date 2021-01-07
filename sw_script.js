@@ -1,6 +1,7 @@
 let count = 0;
 let swLife = 0;
-let pbrTime = 0;
+let pbrTime = -1;
+let pbrSize = -1;
 const incrementBtn = document.getElementById('increment-btn');
 const syncBtn = document.getElementById('sync-btn');
 const countEl = document.getElementById('count');
@@ -10,8 +11,9 @@ const pbrEl = document.getElementById('pbr');
 function render() {
   countEl.innerHTML = count;
   swHeartBeatEl.innerHTML = `SW has lived for ${swLife}s`;
-  if (pbrTime > 0) {
-    pbrEl.innerHTML = `playback response (80kb) received after ${pbrTime}s`;
+  if (pbrTime >= 0) {
+    pbrEl.innerHTML =
+        `playback response (${pbrSize}Kb) received after ${pbrTime}s`;
   } else {
     pbrEl.innerHTML = `playback response not received`;
   }
@@ -33,6 +35,7 @@ async function registerSW() {
     }
     if (evt.data.type === 'PLAYER_RESPONSE_UPDATED') {
       pbrTime = (Date.now() - evt.data.payload.startTs) / 1000;
+      pbrSize = Math.round(evt.data.payload.playerResponse.length / 1024);
     }
     render();
   });
